@@ -4,7 +4,7 @@ dns.setServers(['1.1.1.1', '1.0.0.1']);
 const express = require("express");
 const dontenv = require("dotenv");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion,  } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId,   } = require("mongodb");
 dontenv.config();
 
 const uri = process.env.MONGO_URI;
@@ -38,6 +38,16 @@ async function run() {
     app.get("/houses", async(req, res) =>{
       const result = await housesCollection.find().toArray();
       res.send(result);
+    })
+
+    // get single house details
+    app.get("/houses/:id", async(req, res) => {
+      const id =  req.params.id;
+      const query = {
+        _id: new ObjectId(id)
+      };
+      const house = await housesCollection.findOne(query);  
+      res.send(house)
     })
 
 
