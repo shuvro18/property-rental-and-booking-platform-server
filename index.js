@@ -33,12 +33,22 @@ async function run() {
     await client.connect();
     const db = client.db("property-assignment");
     const housesCollection = db.collection("houses");
+    const commentCollection = db.collection("comments");
 
     // get api for all houses
     app.get("/houses", async(req, res) =>{
       const result = await housesCollection.find().toArray();
       res.send(result);
+    });
+
+    // add comment in commentCollection 
+    app.post("/comments", async (req, res) => {
+      const data = req.body;
+      const result = await commentCollection.insertOne(data);
+      res.send(result);
     })
+
+     
 
     // get single house details
     app.get("/houses/:id", async(req, res) => {
