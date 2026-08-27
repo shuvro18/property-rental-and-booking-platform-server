@@ -31,7 +31,14 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-   
+    const db = client.db("property-assignment");
+    const housesCollection = db.collection("houses");
+
+    // get api for all houses
+    app.get("/houses", async(req, res) =>{
+      const result = await housesCollection.find().toArray();
+      res.send(result);
+    })
 
 
    
