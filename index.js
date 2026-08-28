@@ -34,6 +34,7 @@ async function run() {
     const db = client.db("property-assignment");
     const housesCollection = db.collection("houses");
     const commentCollection = db.collection("comments");
+    const favoriteCollection = db.collection("favorite");
 
     // get api for all houses
     app.get("/houses", async (req, res) => {
@@ -45,6 +46,28 @@ async function run() {
     app.post("/comments", async (req, res) => {
       const data = req.body;
       const result = await commentCollection.insertOne(data);
+      res.send(result);
+    });
+
+    // add to favorite collection
+    app.post("/favorites", async (req, res) => {
+      const data = req.body;
+      const {userId, propertyId} = req.body;
+      
+      const existFavorite = await favoriteCollection.findOne({
+        userId,
+        propertyId
+      });
+      if(existFavorite){
+        return res.status(400).send({message:"You already added it to favorite"})
+      }
+
+      // const isSubscriptionExist = await favoriteCollection.findOne({session_id});
+      // if(isSubscriptionExist){
+      //   return res.status(400).send({message:"You already have a subscription"});
+      // }
+
+      const result = await favoriteCollection.insertOne(data);
       res.send(result);
     });
 
