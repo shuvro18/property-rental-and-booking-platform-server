@@ -66,12 +66,17 @@ async function run() {
       res.send(result);
     });
 
-    
-
     // add comment in commentCollection
     app.post("/comments", async (req, res) => {
       const data = req.body;
       const result = await commentCollection.insertOne(data);
+      res.send(result);
+    });
+
+    // owner add a property
+    app.post("/addproperty", async (req, res) => {
+      const data = req.body;
+      const result = await housesCollection.insertOne(data);
       res.send(result);
     });
 
