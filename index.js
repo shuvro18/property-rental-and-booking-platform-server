@@ -43,6 +43,12 @@ async function run() {
       res.send(result);
     });
 
+    // get api for bookings
+    app.get("/bookings", async (req, res) => {
+      const result = await bookingCollection.find().toArray();
+      res.send(result);
+    });
+
     // add comment in commentCollection
     app.post("/comments", async (req, res) => {
       const data = req.body;
