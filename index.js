@@ -43,11 +43,30 @@ async function run() {
       res.send(result);
     });
 
-    // get api for bookings
+    // get api for bookings tenant
     app.get("/bookings", async (req, res) => {
       const result = await bookingCollection.find().toArray();
       res.send(result);
     });
+
+    // get favorite
+
+    app.get("/favorites", async (req, res) => {
+      const result = await favoriteCollection.find().toArray();
+      res.send(result);
+    });
+
+    // delete from favorite button
+    app.delete("/favorite/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = {
+        _id: new ObjectId(id),
+      };
+      const result = await favoriteCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    
 
     // add comment in commentCollection
     app.post("/comments", async (req, res) => {
