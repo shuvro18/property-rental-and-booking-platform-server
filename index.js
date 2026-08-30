@@ -66,6 +66,32 @@ async function run() {
       res.send(result);
     });
 
+
+    // delete property
+
+     app.delete("/houses/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = {
+        _id: new ObjectId(id),
+      };
+      const result = await housesCollection.deleteOne(query);
+      res.send(result);
+    });
+
+
+    //Update property
+    app.patch("/update/:id", async (req, res) => {
+      const id = req.params.id ;
+      const filter = {_id : new ObjectId(id)}
+      const updateProperty = {
+        $set: req.body,
+      };
+      const result = await housesCollection.updateOne(filter, updateProperty)
+      res.send(result)
+    })
+
+   
+
     // add comment in commentCollection
     app.post("/comments", async (req, res) => {
       const data = req.body;
