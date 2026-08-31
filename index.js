@@ -64,6 +64,31 @@ async function run() {
       res.send(result);
     });
 
+    // get api with aggregate method
+    app.get("/owner/total-earnings/:userId", async (req, res) => {
+      const { userId } = req.params;
+      const totalBookings = await bookingCollection.countDocuments({ userId });
+      const totalHouse = await housesCollection.countDocuments({ userId });
+
+      const totalEarn = await bookingCollection
+        .aggregate([
+          { $match: { userId: userId } },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: { $toDouble: "$price" } },
+            },
+          },
+        ])
+        .toArray();
+
+      res.send({
+        totalEarning: totalEarn[0]?.total,
+        totalHouse: totalHouse,
+        totalBookings: totalBookings,
+      });
+    });
+
     // delete from favorite button
     app.delete("/favorite/:id", async (req, res) => {
       const id = req.params.id;
