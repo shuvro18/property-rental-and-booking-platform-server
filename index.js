@@ -43,6 +43,14 @@ async function run() {
       res.send(result);
     });
 
+    // get houses using users userId
+    app.get("/houses/user/:userId", async (req, res) => {
+      const userId = req.params.userId;
+      const query = { userId: userId };
+      const result = await bookingCollection.find(query).toArray();
+      res.send(result);
+    });
+
     // get api for bookings tenant
     app.get("/bookings", async (req, res) => {
       const result = await bookingCollection.find().toArray();
@@ -66,10 +74,9 @@ async function run() {
       res.send(result);
     });
 
-
     // delete property
 
-     app.delete("/houses/:id", async (req, res) => {
+    app.delete("/houses/:id", async (req, res) => {
       const id = req.params.id;
       const query = {
         _id: new ObjectId(id),
@@ -78,19 +85,16 @@ async function run() {
       res.send(result);
     });
 
-
     //Update property
     app.patch("/update/:id", async (req, res) => {
-      const id = req.params.id ;
-      const filter = {_id : new ObjectId(id)}
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
       const updateProperty = {
         $set: req.body,
       };
-      const result = await housesCollection.updateOne(filter, updateProperty)
-      res.send(result)
-    })
-
-   
+      const result = await housesCollection.updateOne(filter, updateProperty);
+      res.send(result);
+    });
 
     // add comment in commentCollection
     app.post("/comments", async (req, res) => {
