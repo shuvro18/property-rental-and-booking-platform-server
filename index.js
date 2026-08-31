@@ -96,6 +96,22 @@ async function run() {
       res.send(result);
     });
 
+    // update booking property status
+
+    app.patch("/houses/bookings/:id", async (req, res) => {
+      const id = req.params.id;
+      const { status } = req.body;
+
+      const filter = { _id: new ObjectId(id) };
+      const updateProperty = {
+        $set: {
+          status: status,
+        },
+      };
+      const result = await bookingCollection.updateOne(filter, updateProperty);
+      res.send(result);
+    });
+
     // add comment in commentCollection
     app.post("/comments", async (req, res) => {
       const data = req.body;
