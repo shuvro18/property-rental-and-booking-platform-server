@@ -44,6 +44,14 @@ async function run() {
       res.send(result);
     });
 
+    // get all users
+    app.get("/all-users", async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+
+    // users type change
+
     // get houses using users userId
     app.get("/houses/user/:userId", async (req, res) => {
       const userId = req.params.userId;
@@ -111,7 +119,7 @@ async function run() {
         totalHouses,
         totalUser,
         totalOwner,
-        totalEarn: totalEarn[0]?.total
+        totalEarn: totalEarn[0]?.total,
       });
     });
 
@@ -144,6 +152,20 @@ async function run() {
         $set: req.body,
       };
       const result = await housesCollection.updateOne(filter, updateProperty);
+      res.send(result);
+    });
+
+    // admin update user role
+    app.patch("/update-user-role/:userId", async (req, res) => {
+      const { newRole } = req.body;
+      const userId = req.params.userId;
+      const filter = { _id: new ObjectId(userId) };
+      const updateRole = {
+        $set: {
+          type: newRole,
+        },
+      };
+      const result = await userCollection.updateOne(filter, updateRole);
       res.send(result);
     });
 
