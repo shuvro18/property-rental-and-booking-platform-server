@@ -36,6 +36,7 @@ async function run() {
     const commentCollection = db.collection("comments");
     const favoriteCollection = db.collection("favorite");
     const bookingCollection = db.collection("bookings");
+    const userCollection = db.collection("user");
 
     // get api for all houses
     app.get("/houses", async (req, res) => {
@@ -64,7 +65,7 @@ async function run() {
       res.send(result);
     });
 
-    // get api with aggregate method
+    // get api with aggregate method for owner
     app.get("/owner/total-earnings/:userId", async (req, res) => {
       const { userId } = req.params;
       const totalBookings = await bookingCollection.countDocuments({ userId });
@@ -86,6 +87,31 @@ async function run() {
         totalEarning: totalEarn[0]?.total,
         totalHouse: totalHouse,
         totalBookings: totalBookings,
+      });
+    });
+
+    // get api with aggregate method for admin
+    app.get("/admin/total-earning", async (req, res) => {
+      const totalBookings = await bookingCollection.countDocuments();
+      const totalHouses = await housesCollection.countDocuments();
+      const totalUser = await userCollection.countDocuments({ type: "tenant" });
+      const totalOwner = await userCollection.countDocuments({ type: "owner" });
+      const totalEarn = await bookingCollection
+        .aggregate([
+          {
+            $group: {
+              _id: null,
+              total: { $sum: { $toDouble: "$price" } },
+            },
+          },
+        ])
+        .toArray();
+      res.send({
+        totalBookings,
+        totalHouses,
+        totalUser,
+        totalOwner,
+        totalEarn: totalEarn[0]?.total
       });
     });
 
