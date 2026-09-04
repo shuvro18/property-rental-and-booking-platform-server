@@ -155,6 +155,21 @@ async function run() {
       res.send(result);
     });
 
+    // owner reject button and feedback
+    app.patch("/owner-reject/:id", async (req, res) => {
+      const { rejectFeedback } = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const addFeedback = {
+        $set: {
+          rejectionFeedback: rejectFeedback,
+          status: "rejected"
+        },
+      };
+      const result = await housesCollection.updateOne(filter, addFeedback);
+      res.send(result);
+    });
+
     // admin update user role
     app.patch("/update-user-role/:userId", async (req, res) => {
       const { newRole } = req.body;
