@@ -169,6 +169,20 @@ async function run() {
       res.send(result);
     });
 
+    // admin update property status
+    app.patch("/owner-update-status/:id", async (req, res) => {
+      const { newStatus } = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateStatus = {
+        $set: {
+          status: newStatus,
+        },
+      };
+      const result = await housesCollection.updateOne(filter, updateStatus);
+      res.send(result);
+    });
+
     // update booking property status
 
     app.patch("/houses/bookings/:id", async (req, res) => {
