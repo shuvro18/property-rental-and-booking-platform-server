@@ -5,6 +5,7 @@ const express = require("express");
 const dontenv = require("dotenv");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const { createRemoteJWKSet, jwtVerify } = require("jose-cjs");
 dontenv.config();
 
 const uri = process.env.MONGO_URI;
@@ -27,6 +28,30 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+
+const JWKS = createRemoteJWKSet(
+  new URL(`${process.env.CLIENT_URL}/api/auth/jwks`),
+);
+
+const verifyToken = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).send({ message: "unauthorize" });
+  }
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return res.status(401).send({ message: "unauthorize" });
+  }
+
+  try {
+    const { payload } = await jwtVerify(token, JWKS);
+    console.log(payload);
+    next();
+  } catch (error) {
+    console.log(error);
+    res.status(401).send({ message: "unauthorize" });
+  }
+};
 
 async function run() {
   try {
@@ -163,7 +188,7 @@ async function run() {
       const addFeedback = {
         $set: {
           rejectionFeedback: rejectFeedback,
-          status: "rejected"
+          status: "rejected",
         },
       };
       const result = await housesCollection.updateOne(filter, addFeedback);
@@ -222,7 +247,7 @@ async function run() {
     });
 
     // owner add a property
-    app.post("/addproperty", async (req, res) => {
+    app.post("/addproperty", verifyToken, async (req, res) => {
       const data = req.body;
       const result = await housesCollection.insertOne(data);
       res.send(result);
