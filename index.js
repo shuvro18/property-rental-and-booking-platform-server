@@ -69,18 +69,87 @@ async function run() {
       res.send(result);
     });
 
-    // all properties page
+    // all properties page with search and filtering
     app.get("/total-houses", async (req, res) => {
-      const limit = Number(req.query.limit) || 10;
-      const page = Number(req.query.page) || 1;
+      try {
+        const limit = Number(req.query.limit) || 10;
+        const page = Math.max(1, Number(req.query.page) || 1);
+        const { location, propertyType, minPrice, maxPrice, search } = req.query;
 
-      const totalData = await housesCollection.countDocuments({status:"approved"});
-      const totalPage =  Math.ceil(totalData/limit);
-      const skip = (page-1)*limit; 
+        // Base filter: only approved properties
+        const filter = { status: "approved" };
 
-      const result = await housesCollection.find({status:"approved"}).skip(skip).limit(limit).toArray();
-      
-      res.send({result, totalPage});
+        // Location search (case-insensitive substring)
+        if (location && location.trim() !== "") {
+          filter.location = { $regex: location.trim(), $options: "i" };
+        }
+
+        // Property type filter (case-insensitive match)
+        if (
+          propertyType &&
+          propertyType.trim() !== "" &&
+          propertyType.toLowerCase() !== "any" &&
+          propertyType.toLowerCase() !== "any type"
+        ) {
+          filter.propertyType = { $regex: `^${propertyType.trim()}$`, $options: "i" };
+        }
+
+        // General search query (matches title, description, or location)
+        if (search && search.trim() !== "") {
+          const searchRegex = { $regex: search.trim(), $options: "i" };
+          filter.$or = [
+            { title: searchRegex },
+            { description: searchRegex },
+            { location: searchRegex },
+          ];
+        }
+
+        // Price range filtering on 'rent' (handles both Number and String safely)
+        const min = minPrice && !isNaN(Number(minPrice)) ? Number(minPrice) : null;
+        const max = maxPrice && !isNaN(Number(maxPrice)) ? Number(maxPrice) : null;
+
+        if (min !== null || max !== null) {
+          const priceConditions = [];
+          if (min !== null) {
+            priceConditions.push({
+              $gte: [
+                { $convert: { input: "$rent", to: "double", onError: 0, onNull: 0 } },
+                min,
+              ],
+            });
+          }
+          if (max !== null) {
+            priceConditions.push({
+              $lte: [
+                { $convert: { input: "$rent", to: "double", onError: 0, onNull: 0 } },
+                max,
+              ],
+            });
+          }
+
+          if (priceConditions.length > 0) {
+            filter.$expr =
+              priceConditions.length === 1
+                ? priceConditions[0]
+                : { $and: priceConditions };
+          }
+        }
+
+        const totalData = await housesCollection.countDocuments(filter);
+        const totalPage = Math.ceil(totalData / limit) || 1;
+        const skip = (page - 1) * limit;
+
+        const result = await housesCollection
+          .find(filter)
+          .skip(skip)
+          .limit(limit)
+          .toArray();
+
+        res.send({ result, totalPage, totalData });
+      } catch (error) {
+        console.error("Error fetching total houses:", error);
+        res.status(500).send({ message: "Failed to fetch houses", error: error.message });
+      }
     });
 
     // get all users
